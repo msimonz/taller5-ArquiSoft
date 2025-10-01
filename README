@@ -1,0 +1,39 @@
+#Construir la imagen del las bases de datos:
+docker build -f Dockerfile.inventorydb -t inventory-mysql:1.0 .
+docker build -f Dockerfile.billingdb -t billing-mysql:1.0 .
+docker build -f Dockerfile.paymentsdb -t payments-mysql:1.0 .
+
+#Levantar el contenedor de las bases de datos:
+docker run -d --name mysql_inventory \
+  -p 3307:3306 \
+  -v mysql_inventory_data:/var/lib/mysql \
+  inventory-mysql:1.0
+
+docker run -d --name mysql_billing \
+  -p 3308:3306 \
+  -v mysql_billing_data:/var/lib/mysql \
+  billing-mysql:1.0
+
+docker run -d --name mysql_payments \
+  -p 3309:3306 \
+  -v mysql_payments_data:/var/lib/mysql \
+  payments-mysql:1.0
+
+#Correr cada uno de los services por aparte:
+./mvnw -DskipTests spring-boot:run
+
+#curl al inventory-service
+curl http://localhost:8081/api/products
+
+#curl al billing-service
+curl -s -X POST http://localhost:8082/api/invoices \
+  -H "Content-Type: application/json" \
+  -d '{"paymentId":1}'
+{"invoiceId":1}%   
+
+#Eliminar los contenedores de bases de datos y sus volumes:
+docker rm -f mysql_inventory 2>/dev/null || true
+docker volume rm mysql_inventory_data 2>/dev/null || true
+
+docker rm -f mysql_billing 2>/dev/null || true
+docker volume rm mysql_billing_data 2>/dev/null || true

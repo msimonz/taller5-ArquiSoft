@@ -1,0 +1,10 @@
+# Dockerfile.paymentsdb
+FROM mysql:8.0
+
+ENV MYSQL_DATABASE=payments
+ENV MYSQL_USER=simis
+ENV MYSQL_PASSWORD=password
+ENV MYSQL_ROOT_PASSWORD=password
+
+# carga el esquema en el primer arranque (solo si el volumen está vacío)
+COPY db_payments.sql /docker-entrypoint-initdb.d/1_payments_schema.sql

@@ -1,0 +1,11 @@
+# Dockerfile.billingdb
+FROM mysql:8.0
+
+# Crea la BD y el usuario en el primer arranque
+ENV MYSQL_DATABASE=billing
+ENV MYSQL_USER=simis
+ENV MYSQL_PASSWORD=password
+ENV MYSQL_ROOT_PASSWORD=password
+
+# Carga el esquema en el primer arranque del volumen
+COPY db_billing.sql /docker-entrypoint-initdb.d/1_billing_schema.sql

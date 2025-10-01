@@ -1,0 +1,12 @@
+# Dockerfile.inventorydb
+FROM mysql:8.0
+
+# Config por defecto: crea la base y el usuario con privilegios
+ENV MYSQL_DATABASE=inventory
+ENV MYSQL_USER=simis
+ENV MYSQL_PASSWORD=password
+ENV MYSQL_ROOT_PASSWORD=password
+
+# Copiamos el esquema para que se ejecute en el primer arranque del contenedor
+# Nota: solo corre si /var/lib/mysql está vacío (primer arranque del volumen)
+COPY db_inventory.sql /docker-entrypoint-initdb.d/1_inventory_schema.sql
