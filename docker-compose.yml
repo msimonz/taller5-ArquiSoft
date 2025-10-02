@@ -1,154 +1,142 @@
-version: '3.8'
-
 services:
-  # -------------------------
-  # Databases (built from the Dockerfile.* files in ./db)
-  # -------------------------
+  # ==================== DATABASES ====================
   mysql_inventory:
     build:
       context: ./db
       dockerfile: Dockerfile.inventorydb
     container_name: mysql_inventory
-    restart: always
+    restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: inventorydb
+      MYSQL_DATABASE: inventory
       MYSQL_USER: simis
       MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: rootpassword
     ports:
-      - "3307:3306"
+      - "3307:3306"            # acceso desde host
     volumes:
-      - mysql_inventory_data:/var/lib/mysql
+      - inventory_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -prootpassword || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
 
   mysql_billing:
     build:
       context: ./db
       dockerfile: Dockerfile.billingdb
     container_name: mysql_billing
-    restart: always
+    restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: billingdb
+      MYSQL_DATABASE: billing
       MYSQL_USER: simis
       MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: rootpassword
     ports:
       - "3308:3306"
     volumes:
-      - mysql_billing_data:/var/lib/mysql
+      - billing_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -prootpassword || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
 
   mysql_payments:
     build:
       context: ./db
       dockerfile: Dockerfile.paymentsdb
     container_name: mysql_payments
-    restart: always
+    restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: paymentsdb
+      MYSQL_DATABASE: payments
       MYSQL_USER: simis
       MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: rootpassword
     ports:
       - "3309:3306"
     volumes:
-      - mysql_payments_data:/var/lib/mysql
+      - payments_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -prootpassword || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
 
-  # -------------------------
-  # Inventory service
-  # -------------------------
-  inventory:
+  # ==================== AGGREGATOR ====================
+
+  aggregator:
     build:
-      context: ./inventory-service
-      dockerfile: Dockerfile
-    container_name: inventory_service
+      context: ./aggregator-service       # carpeta donde está su Dockerfile
+      dockerfile: Dockerfile              # si tu archivo se llama distinto, cámbialo
+    image: local/aggregator-service:dev   # ← se crea la IMAGEN con esta etiqueta
+    container_name: aggregator-service
+    restart: unless-stopped
     depends_on:
-      mysql_inventory:
-        condition: service_healthy
-    restart: on-failure
+      mysql_inventory: { condition: service_healthy }
+      mysql_billing:   { condition: service_healthy }
+      mysql_payments:  { condition: service_healthy }
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql_inventory:3306/inventorydb
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql_inventory:3306/inventory?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: simis
       SPRING_DATASOURCE_PASSWORD: password
-      SERVER_PORT: 8081
+      SPRING_DATASOURCE_BILLING_URL: jdbc:mysql://mysql_billing:3306/billing?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_BILLING_USERNAME: simis
+      SPRING_DATASOURCE_BILLING_PASSWORD: password
+      SPRING_DATASOURCE_PAYMENTS_URL: jdbc:mysql://mysql_payments:3306/payments?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_PAYMENTS_USERNAME: simis
+      SPRING_DATASOURCE_PAYMENTS_PASSWORD: password
     ports:
-      - "8081:8081"
+      - "8090:8080"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health || true"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
 
-  # -------------------------
-  # Payments service
-  # -------------------------
-  payments:
-    build:
-      context: ./payments-service
-      dockerfile: Dockerfile
-    container_name: payments_service
-    depends_on:
-      mysql_payments:
-        condition: service_healthy
-      inventory:
-        condition: service_started
-      billing:
-        condition: service_started
-    restart: on-failure
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql_payments:3306/paymentsdb
-      SPRING_DATASOURCE_USERNAME: simis
-      SPRING_DATASOURCE_PASSWORD: password
-      INVENTORY_BASE: http://inventory:8081   # si tu servicio usa esta var para WebClient
-      BILLING_BASE: http://billing:8083
-      SERVER_PORT: 8082
-    ports:
-      - "8082:8082"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health || true"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
-  # -------------------------
-  # Billing service
-  # -------------------------
-  billing:
-    build:
-      context: ./billing-service
-      dockerfile: Dockerfile
-    container_name: billing_service
+  # ==================== MICROSERVICIOS ====================
+  payments-service:
+    build: ./payments-service
+    container_name: payments-service
+    restart: unless-stopped
     depends_on:
-      mysql_billing:
-        condition: service_healthy
-    restart: on-failure
+      aggregator: { condition: service_healthy }
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql_billing:3306/billingdb
-      SPRING_DATASOURCE_USERNAME: simis
-      SPRING_DATASOURCE_PASSWORD: password
-      SERVER_PORT: 8083
+      # OpenFeign leerá aggregator.url; este env var lo sobreescribe por relaxed binding.
+      AGGREGATOR_URL: http://aggregator:8080
+      LOGGING_LEVEL_feign: INFO
+      LOGGING_LEVEL_com.taller5.payments.client: DEBUG
     ports:
-      - "8083:8083"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health || true"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - "8082:8080"
+
+  inventory-service:
+    build: ./inventory-service
+    container_name: inventory-service
+    restart: unless-stopped
+    depends_on:
+      aggregator: { condition: service_healthy }
+    environment:
+      AGGREGATOR_URL: http://aggregator:8080
+      LOGGING_LEVEL_feign: INFO
+      LOGGING_LEVEL_com.taller5.inventory.dal: DEBUG
+    ports:
+      - "8081:8080"
+
+  billing-service:
+    build: ./billing-service
+    container_name: billing-service
+    restart: unless-stopped
+    depends_on:
+      aggregator: { condition: service_healthy }
+    environment:
+      AGGREGATOR_URL: http://aggregator:8080
+      LOGGING_LEVEL_feign: INFO
+      LOGGING_LEVEL_com.taller5.billing.dal: DEBUG
+    ports:
+      - "8083:8080"
 
 volumes:
-  mysql_inventory_data:
-  mysql_billing_data:
-  mysql_payments_data:
+  inventory_data:
+  billing_data:
+  payments_data:

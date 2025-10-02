@@ -1,38 +1,38 @@
 package com.taller5.billing.controller;
 
-import com.taller5.billing.model.Invoice;
-import com.taller5.billing.repository.InvoiceRepository;
-import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
+import com.taller5.billing.client.AggregatorBillingDalClient;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.web.bind.annotation.*;
+import java.math.BigDecimal;
 
 @RestController
-@RequestMapping("/api")
-@CrossOrigin(origins = "*")
+@RequestMapping("/api/invoices")
 public class BillingController {
-  private final InvoiceRepository repo;
 
-  public BillingController(InvoiceRepository repo) { this.repo = repo; }
+  private final AggregatorBillingDalClient dal;
 
-  public record CreateInvoiceReq(Long paymentId) {}
-  public record CreateInvoiceRes(Long invoiceId) {}
-
-  // Crea una factura para un paymentId (idempotente: si ya existe, devuelve la existente)
-  @PostMapping("/invoices")
-  @Transactional
-  public ResponseEntity<?> create(@RequestBody CreateInvoiceReq req) {
-    if (req.paymentId() == null) return ResponseEntity.badRequest().body("paymentId requerido");
-    var existing = repo.findByPaymentId(req.paymentId()).orElse(null);
-    if (existing != null) return ResponseEntity.ok(new CreateInvoiceRes(existing.getId()));
-
-    var inv = repo.save(new Invoice(null, req.paymentId()));
-    return ResponseEntity.ok(new CreateInvoiceRes(inv.getId()));
+  public BillingController(AggregatorBillingDalClient dal) {
+    this.dal = dal;
   }
 
-  // Consultar por id (útil para pruebas)
-  @GetMapping("/invoices/{id}")
-  public ResponseEntity<?> get(@PathVariable Long id) {
-    return repo.findById(id).<ResponseEntity<?>>map(ResponseEntity::ok)
-      .orElseGet(() -> ResponseEntity.notFound().build());
+  @PostMapping
+  public AggregatorBillingDalClient.CreateInvoiceRes create(@RequestBody CreateInvoiceReq req) {
+    var dalReq = new AggregatorBillingDalClient.CreateInvoiceReq(
+        req.paymentId(), req.customerId(), req.amount(), req.description()
+    );
+    return dal.create(dalReq);
   }
+
+  @GetMapping("/{id}")
+  public AggregatorBillingDalClient.InvoiceDto get(@PathVariable Long id) {
+    return dal.get(id);
+  }
+
+  // DTOs expuestos por billing-service (pueden ser iguales a los del DAL)
+  public record CreateInvoiceReq(
+      @NotNull Long paymentId,
+      @NotNull Long customerId,
+      @NotNull BigDecimal amount,
+      String description
+  ) {}
 }

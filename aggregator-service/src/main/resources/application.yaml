@@ -2,28 +2,49 @@ server:
   port: 8090
 
 spring:
-  jta:
-    enabled: true
+  application:
+    name: aggregator-service
+
+  # === INVENTORY (PRIMARY) ===
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3307/inventory?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: simis
+    password: password
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+    # === BILLING (SECONDARY) ===
+    billing:
+      url: jdbc:mysql://127.0.0.1:3308/billing?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      username: simis
+      password: password
+      driver-class-name: com.mysql.cj.jdbc.Driver
+
+    # === PAYMENTS (THIRD) ===
+    payments:
+      url: jdbc:mysql://127.0.0.1:3309/payments?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      username: simis
+      password: password
+      driver-class-name: com.mysql.cj.jdbc.Driver
+
   jpa:
-    open-in-view: false
-    properties:
-      hibernate.transaction.jta.platform: org.hibernate.engine.transaction.jta.platform.internal.NarayanaJtaPlatform
-      hibernate.transaction.coordinator_class: jta
-      jakarta.persistence.transactionType: JTA
-      hibernate.dialect: org.hibernate.dialect.MySQLDialect
     hibernate:
       ddl-auto: none
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+    open-in-view: false
 
-datasources:
-  inventory:
-    url: jdbc:mysql://127.0.0.1:3307/inventorydb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-    username: simis
-    password: password
-  billing:
-    url: jdbc:mysql://127.0.0.1:3308/billingdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-    username: simis
-    password: password
-  payments:
-    url: jdbc:mysql://127.0.0.1:3309/paymentsdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-    username: simis
-    password: password
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,mappings
+
+# Desactiva auto-ejecución de scripts si te molesta la inicialización por defecto
+spring.sql.init.mode: never
+
+logging:
+  level:
+    com.taller5.aggregator.dal.inventory: DEBUG
+    com.taller5.aggregator.dal.billing:  DEBUG
+    com.taller5.aggregator.dal.payments: DEBUG
