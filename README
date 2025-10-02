@@ -1,3 +1,25 @@
+#Construir y levantar docker compose
+docker compose up --build -d
+
+
+#Ver logs
+docker compose logs -f inventory
+docker compose logs -f payments
+docker compose logs -f billing
+
+
+#parar y borrar
+docker compose down -v
+
+
+
+
+
+
+
+
+
+
 #Construir la imagen del las bases de datos:
 docker build -f Dockerfile.inventorydb -t inventory-mysql:1.0 .
 docker build -f Dockerfile.billingdb -t billing-mysql:1.0 .
