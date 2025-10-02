@@ -2,6 +2,7 @@ package com.taller5.payments.controller;
 
 import com.taller5.payments.model.Payment;
 import com.taller5.payments.repository.PaymentRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,10 +14,17 @@ import org.springframework.web.reactive.function.client.WebClient;
 @CrossOrigin(origins = "*")
 public class CheckoutController {
   private final PaymentRepository repo;
-  private final WebClient invClient = WebClient.create(System.getProperty("inventory.base", "http://localhost:8081"));
-  private final WebClient billClient = WebClient.create(System.getProperty("billing.base", "http://localhost:8082"));
+  private final WebClient invClient;
+  private final WebClient billClient;
 
-  public CheckoutController(PaymentRepository repo) { this.repo = repo; }
+  // Leemos variables de entorno (o propiedades de Spring) INVENTORY_BASE y BILLING_BASE
+  public CheckoutController(PaymentRepository repo,
+                            @Value("${INVENTORY_BASE:http://localhost:8081}") String inventoryBase,
+                            @Value("${BILLING_BASE:http://localhost:8083}") String billingBase) {
+    this.repo = repo;
+    this.invClient = WebClient.builder().baseUrl(inventoryBase).build();
+    this.billClient = WebClient.builder().baseUrl(billingBase).build();
+  }
 
   public record CheckoutReq(Long customerId, Long productId, Integer quantity, Double amount) {}
   public record CheckoutRes(Long paymentId, Long invoiceId, String status) {}
