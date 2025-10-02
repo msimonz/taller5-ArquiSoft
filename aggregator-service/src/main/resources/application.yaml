@@ -1,0 +1,29 @@
+server:
+  port: 8090
+
+spring:
+  jta:
+    enabled: true
+  jpa:
+    open-in-view: false
+    properties:
+      hibernate.transaction.jta.platform: org.hibernate.engine.transaction.jta.platform.internal.NarayanaJtaPlatform
+      hibernate.transaction.coordinator_class: jta
+      jakarta.persistence.transactionType: JTA
+      hibernate.dialect: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: none
+
+datasources:
+  inventory:
+    url: jdbc:mysql://127.0.0.1:3307/inventorydb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: simis
+    password: password
+  billing:
+    url: jdbc:mysql://127.0.0.1:3308/billingdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: simis
+    password: password
+  payments:
+    url: jdbc:mysql://127.0.0.1:3309/paymentsdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: simis
+    password: password

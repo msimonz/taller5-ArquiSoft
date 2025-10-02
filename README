@@ -12,14 +12,6 @@ docker compose logs -f billing
 docker compose down -v
 
 
-
-
-
-
-
-
-
-
 #Construir la imagen del las bases de datos:
 docker build -f Dockerfile.inventorydb -t inventory-mysql:1.0 .
 docker build -f Dockerfile.billingdb -t billing-mysql:1.0 .
@@ -48,10 +40,14 @@ docker run -d --name mysql_payments \
 curl http://localhost:8081/api/products
 
 #curl al billing-service
-curl -s -X POST http://localhost:8082/api/invoices \
+curl -s -X POST http://localhost:8083/api/invoices \
   -H "Content-Type: application/json" \
   -d '{"paymentId":1}'
-{"invoiceId":1}%   
+
+#curl al payments-service
+curl -s -X POST http://localhost:8082/api/checkout \
+  -H "Content-Type: application/json" \
+  -d '{"customerId":1,"productId":1,"quantity":1,"amount":2500.00}' 
 
 #Eliminar los contenedores de bases de datos y sus volumes:
 docker rm -f mysql_inventory 2>/dev/null || true
@@ -59,3 +55,6 @@ docker volume rm mysql_inventory_data 2>/dev/null || true
 
 docker rm -f mysql_billing 2>/dev/null || true
 docker volume rm mysql_billing_data 2>/dev/null || true
+
+docker rm -f mysql_payments 2>/dev/null || true
+docker volume rm mysql_payments_data 2>/dev/null || true
