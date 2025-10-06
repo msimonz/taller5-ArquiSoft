@@ -1,7 +1,7 @@
 package com.taller5.payments.controller;
 
-import com.taller5.dal.TransactionalDal;
-import com.taller5.dal.TransactionalDal.CheckoutResult;
+import com.taller5.dal.TransactionalDalV2;
+import com.taller5.dal.TransactionalDalV2.CheckoutResult;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,9 +12,9 @@ import java.math.BigDecimal;
 @CrossOrigin(origins = "*")
 public class CheckoutController {
 
-  private final TransactionalDal dal;
+  private final TransactionalDalV2 dal;
 
-  public CheckoutController(TransactionalDal dal) {
+  public CheckoutController(TransactionalDalV2 dal) {
     this.dal = dal;
   }
 

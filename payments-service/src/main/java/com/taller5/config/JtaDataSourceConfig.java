@@ -31,7 +31,19 @@ public class JtaDataSourceConfig {
                                         XADataSourceWrapper xaWrapper) throws Exception {
     MysqlXADataSource mysqlXa = new MysqlXADataSource();
     // MysqlXADataSource uses setUrl, setUser, setPassword
-    mysqlXa.setUrl(props.getUrl());
+    String url = props.getUrl();
+    // Añadir parámetros específicos para timeouts y XA
+    if (!url.contains("innodb_lock_wait_timeout")) {
+      url += (url.contains("?") ? "&" : "?") + "innodb_lock_wait_timeout=30";
+    }
+    if (!url.contains("autoReconnect")) {
+      url += "&autoReconnect=true";
+    }
+    if (!url.contains("pinGlobalTxToPhysicalConnection")) {
+      url += "&pinGlobalTxToPhysicalConnection=true";
+    }
+    
+    mysqlXa.setUrl(url);
     mysqlXa.setUser(props.getUsername());
     mysqlXa.setPassword(props.getPassword());
     try {
@@ -79,7 +91,19 @@ public class JtaDataSourceConfig {
   public DataSource paymentsDataSource(@Qualifier("paymentsDataSourceProperties") DataSourceProperties props,
                                        XADataSourceWrapper xaWrapper) throws Exception {
     MysqlXADataSource mysqlXa = new MysqlXADataSource();
-    mysqlXa.setUrl(props.getUrl());
+    String url = props.getUrl();
+    // Añadir parámetros específicos para timeouts y XA
+    if (!url.contains("innodb_lock_wait_timeout")) {
+      url += (url.contains("?") ? "&" : "?") + "innodb_lock_wait_timeout=30";
+    }
+    if (!url.contains("autoReconnect")) {
+      url += "&autoReconnect=true";
+    }
+    if (!url.contains("pinGlobalTxToPhysicalConnection")) {
+      url += "&pinGlobalTxToPhysicalConnection=true";
+    }
+    
+    mysqlXa.setUrl(url);
     mysqlXa.setUser(props.getUsername());
     mysqlXa.setPassword(props.getPassword());
     try {
@@ -125,7 +149,19 @@ public class JtaDataSourceConfig {
   public DataSource billingDataSource(@Qualifier("billingDataSourceProperties") DataSourceProperties props,
                                      XADataSourceWrapper xaWrapper) throws Exception {
     MysqlXADataSource mysqlXa = new MysqlXADataSource();
-    mysqlXa.setUrl(props.getUrl());
+    String url = props.getUrl();
+    // Añadir parámetros específicos para timeouts y XA
+    if (!url.contains("innodb_lock_wait_timeout")) {
+      url += (url.contains("?") ? "&" : "?") + "innodb_lock_wait_timeout=30";
+    }
+    if (!url.contains("autoReconnect")) {
+      url += "&autoReconnect=true";
+    }
+    if (!url.contains("pinGlobalTxToPhysicalConnection")) {
+      url += "&pinGlobalTxToPhysicalConnection=true";
+    }
+    
+    mysqlXa.setUrl(url);
     mysqlXa.setUser(props.getUsername());
     mysqlXa.setPassword(props.getPassword());
     try {

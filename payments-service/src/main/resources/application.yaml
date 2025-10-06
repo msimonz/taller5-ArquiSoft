@@ -16,6 +16,12 @@ spring:
       ddl-auto: none
     properties:
       hibernate.dialect: org.hibernate.dialect.MySQL8Dialect
+      # Configuraciones para mejorar el manejo de locks y timeouts
+      "[hibernate.query.timeout]": 30000
+      "[hibernate.jdbc.batch_size]": 20
+      "[hibernate.order_inserts]": true
+      "[hibernate.order_updates]": true
+      "[hibernate.jdbc.batch_versioned_data]": true
 
   jta:
     enabled: true
