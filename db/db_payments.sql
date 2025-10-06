@@ -4,4 +4,4 @@ CREATE TABLE IF NOT EXISTS payment (
   product_id BIGINT UNSIGNED NOT NULL,
   amount DECIMAL(12,2) NOT NULL,
   PRIMARY KEY (id)
-);
+) ENGINE=InnoDB;

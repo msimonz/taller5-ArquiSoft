@@ -3,4 +3,4 @@ CREATE TABLE IF NOT EXISTS invoice (
   payment_id BIGINT UNSIGNED NOT NULL,         -- id del pago
   PRIMARY KEY (id),
   UNIQUE KEY uq_payment (payment_id)           -- 1 factura por pago
-);
+) ENGINE=InnoDB;

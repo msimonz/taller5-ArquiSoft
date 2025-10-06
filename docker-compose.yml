@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   # -------------------------
-  # Databases (built from the Dockerfile.* files in ./db)
+  # Databases
   # -------------------------
   mysql_inventory:
     build:
@@ -68,32 +68,7 @@ services:
       retries: 5
 
   # -------------------------
-  # Inventory service
-  # -------------------------
-  inventory:
-    build:
-      context: ./inventory-service
-      dockerfile: Dockerfile
-    container_name: inventory_service
-    depends_on:
-      mysql_inventory:
-        condition: service_healthy
-    restart: on-failure
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql_inventory:3306/inventorydb
-      SPRING_DATASOURCE_USERNAME: simis
-      SPRING_DATASOURCE_PASSWORD: password
-      SERVER_PORT: 8081
-    ports:
-      - "8081:8081"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health || true"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # -------------------------
-  # Payments service
+  # Monolito (payments)
   # -------------------------
   payments:
     build:
@@ -101,49 +76,38 @@ services:
       dockerfile: Dockerfile
     container_name: payments_service
     depends_on:
-      mysql_payments:
+      mysql_inventory:
         condition: service_healthy
-      inventory:
-        condition: service_started
-      billing:
-        condition: service_started
-    restart: on-failure
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql_payments:3306/paymentsdb
-      SPRING_DATASOURCE_USERNAME: simis
-      SPRING_DATASOURCE_PASSWORD: password
-      INVENTORY_BASE: http://inventory:8081   # si tu servicio usa esta var para WebClient
-      BILLING_BASE: http://billing:8083
-      SERVER_PORT: 8082
-    ports:
-      - "8082:8082"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health || true"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # -------------------------
-  # Billing service
-  # -------------------------
-  billing:
-    build:
-      context: ./billing-service
-      dockerfile: Dockerfile
-    container_name: billing_service
-    depends_on:
       mysql_billing:
         condition: service_healthy
+      mysql_payments:
+        condition: service_healthy
     restart: on-failure
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql_billing:3306/billingdb
-      SPRING_DATASOURCE_USERNAME: simis
-      SPRING_DATASOURCE_PASSWORD: password
-      SERVER_PORT: 8083
+      # DATASOURCE URLs -> apuntan a los servicios de mysql del compose
+      SPRING_DATASOURCE_INVENTORY_URL: jdbc:mysql://mysql_inventory:3306/inventorydb?pinGlobalTxToPhysicalConnection=true&allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
+      SPRING_DATASOURCE_INVENTORY_USERNAME: simis
+      SPRING_DATASOURCE_INVENTORY_PASSWORD: password
+
+      SPRING_DATASOURCE_PAYMENTS_URL: jdbc:mysql://mysql_payments:3306/paymentsdb?pinGlobalTxToPhysicalConnection=true&allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
+      SPRING_DATASOURCE_PAYMENTS_USERNAME: simis
+      SPRING_DATASOURCE_PAYMENTS_PASSWORD: password
+
+      SPRING_DATASOURCE_BILLING_URL: jdbc:mysql://mysql_billing:3306/billingdb?pinGlobalTxToPhysicalConnection=true&allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
+      SPRING_DATASOURCE_BILLING_USERNAME: simis
+      SPRING_DATASOURCE_BILLING_PASSWORD: password
+
+      SERVER_PORT: 8080
+      GRPC_PORT: 50051
+
+      # opcionales: si tu app usa las urls antiguas para WebClient (no deberían usarse si el DAL es interno)
+      INVENTORY_BASE: http://localhost:8080  # o http://payments:8080 if inventory endpoints are inside monolito
+      BILLING_BASE:   http://localhost:8080
     ports:
-      - "8083:8083"
+      - "8080:8080"    # HTTP (REST / SOAP via Spring)
+      - "50051:50051"  # gRPC
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health || true"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
