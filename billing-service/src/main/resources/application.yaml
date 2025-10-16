@@ -5,6 +5,22 @@ spring:
   application:
     name: billing-service
 
+  # Kafka Configuration
+  kafka:
+    bootstrap-servers: kafka:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+  # ActiveMQ Artemis Configuration (WildFly integrated)
+  artemis:
+    mode: native
+    broker-url: tcp://notification-mdb:61616
+    user: admin
+    password: admin123
+  jms:
+    pub-sub-domain: false  # usar colas, no topics
+
 aggregator:
   url: http://localhost:8090   # en contenedor usa host.docker.internal
 

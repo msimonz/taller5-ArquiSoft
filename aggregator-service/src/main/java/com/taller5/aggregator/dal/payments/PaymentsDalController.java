@@ -16,13 +16,13 @@ public class PaymentsDalController {
 
   record ChargeRequest(
       @NotNull @JsonAlias({"customerId","customer_id"}) Long customerId,
-      @NotNull @JsonAlias({"productId","product_id"})   Long productId,
+      @NotNull @JsonAlias({"customerEmail","customer_email"}) String customerEmail,
       @NotNull @JsonAlias({"amount"})                   BigDecimal amount
   ) {}
 
   // te conviene devolver el id creado
-  record PaymentDTO(Long id, Long customerId, Long productId, BigDecimal amount) {
-    static PaymentDTO of(Payment p){ return new PaymentDTO(p.getId(), p.getCustomerId(), p.getProductId(), p.getAmount()); }
+  record PaymentDTO(Long id, Long customerId, String customerEmail, BigDecimal amount, String status) {
+    static PaymentDTO of(Payment p){ return new PaymentDTO(p.getId(), p.getCustomerId(), p.getCustomerEmail(), p.getAmount(), p.getStatus()); }
   }
 
   private final PaymentsDalService svc;
@@ -30,9 +30,9 @@ public class PaymentsDalController {
 
   @PostMapping("/charge")
   public PaymentDTO charge(@RequestBody @Validated ChargeRequest req) {
-    System.out.printf("DAL /charge => customerId=%s, productId=%s, amount=%s%n",
-        req.customerId(), req.productId(), req.amount());
-    return PaymentDTO.of(svc.charge(req.customerId(), req.productId(), req.amount()));
+    System.out.printf("DAL /charge => customerId=%s, customerEmail=%s, amount=%s%n",
+        req.customerId(), req.customerEmail(), req.amount());
+    return PaymentDTO.of(svc.charge(req.customerId(), req.customerEmail(), req.amount()));
   }
 
   @GetMapping("/{id}")

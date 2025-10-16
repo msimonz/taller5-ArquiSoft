@@ -1,0 +1,21 @@
+﻿server:
+  port: 8084
+
+spring:
+  application:
+    name: supplier-listener
+
+  kafka:
+    bootstrap-servers: kafka:9092
+    consumer:
+      group-id: supplier-listener-group
+      auto-offset-reset: earliest
+      properties:
+        spring.json.trusted.packages: "*"
+    properties:
+      spring.json.type.mapping: supplierNotification:com.taller5.supplier.dto.SupplierNotification
+
+logging:
+  level:
+    com.taller5.supplier: DEBUG
+    org.springframework.kafka: INFO

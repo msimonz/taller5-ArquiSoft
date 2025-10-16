@@ -1,0 +1,12 @@
+embed-server --server-config=standalone-full.xml
+
+# Configurar el acceptor de Artemis para aceptar conexiones remotas sin seguridad
+/subsystem=messaging-activemq/server=default/acceptor=netty-acceptor:add(factory-class=org.apache.activemq.artemis.core.remoting.impl.netty.NettyAcceptorFactory,params={host=0.0.0.0,port=61616,protocols=CORE})
+
+# Deshabilitar seguridad de Artemis para simplificar
+/subsystem=messaging-activemq/server=default:write-attribute(name=security-enabled,value=false)
+
+# Permitir auto-creación de queues
+/subsystem=messaging-activemq/server=default/address-setting=#:write-attribute(name=auto-create-queues,value=true)
+
+stop-embedded-server

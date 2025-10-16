@@ -3,4 +3,4 @@ package com.taller5.payments.dto;
 
 import java.math.BigDecimal;
 
-public record ChargeRequest(Long customerId, Long productId, BigDecimal amount) {}
+public record ChargeRequest(Long customerId, String customerEmail, BigDecimal amount) {}

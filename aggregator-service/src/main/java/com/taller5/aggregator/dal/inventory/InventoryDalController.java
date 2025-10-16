@@ -18,7 +18,17 @@ public class InventoryDalController {
   @GetMapping("/products")
   public List<ProductDto> list() {
     return service.listProducts().stream()
-        .map(p -> new ProductDto(p.getId(), p.getName(), p.getPrice(), p.getStock()))
+        .map(p -> new ProductDto(
+            p.getId(), 
+            p.getName(), 
+            p.getPrice(), 
+            p.getStock(),
+            p.getSupplier() != null ? new SupplierDto(
+                p.getSupplier().getId(),
+                p.getSupplier().getName(),
+                p.getSupplier().getEmail()
+            ) : null
+        ))
         .toList();
   }
 
@@ -37,6 +47,7 @@ public class InventoryDalController {
   }
 
   // --- DTOs ---
-  public record ProductDto(Long id, String name, BigDecimal price, Integer stock) {}
+  public record ProductDto(Long id, String name, BigDecimal price, Integer stock, SupplierDto supplier) {}
+  public record SupplierDto(Long id, String name, String email) {}
   public record ReserveReq(long productId, int quantity) {}
 }

@@ -12,12 +12,14 @@ public class PaymentsDalService {
   public PaymentsDalService(PaymentRepository repo) { this.repo = repo; }
 
   @Transactional
-  public Payment charge(Long customerId, Long productId, java.math.BigDecimal amount) {
+  public Payment charge(Long customerId, String customerEmail, java.math.BigDecimal amount) {
     // aquí harías lógica de cobro real si la hubiera; por ahora persistimos
     Payment p = new Payment();
     p.setCustomerId(customerId);
-    p.setProductId(productId);
+    p.setCustomerEmail(customerEmail);
     p.setAmount(amount);
+    p.setStatus("COMPLETED");
+    p.setCreatedAt(java.time.Instant.now());
     return repo.save(p);
   }
 

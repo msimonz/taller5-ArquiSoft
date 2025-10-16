@@ -1,0 +1,17 @@
+# WildFly CLI script para configurar la conexión con ActiveMQ Artemis
+
+embed-server --std-out=echo
+
+# Configurar el remote outbound socket binding para ActiveMQ
+/socket-binding-group=standard-sockets/remote-destination-outbound-socket-binding=activemq:add(host=activemq, port=61616)
+
+# Configurar el remote connector
+/subsystem=messaging-activemq/remote-connector=activemq-connector:add(socket-binding=activemq)
+
+# Configurar el pooled connection factory para conectarse a ActiveMQ externo
+/subsystem=messaging-activemq/pooled-connection-factory=activemq-ra:add(transaction=xa, entries=[java:/JmsXA java:jboss/DefaultJMSConnectionFactory], connectors=[activemq-connector], user=admin, password=admin)
+
+# Configurar la cola de destino (external queue)
+/subsystem=messaging-activemq/external-jms-queue=customerNotificationsQueue:add(entries=[java:jboss/exported/jms/queue/customer-notifications])
+
+stop-embedded-server

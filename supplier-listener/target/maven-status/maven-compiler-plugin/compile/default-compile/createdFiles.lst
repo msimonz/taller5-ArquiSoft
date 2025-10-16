@@ -1,0 +1,6 @@
+com\taller5\supplier\dto\SupplierNotification$ProductItem.class
+com\taller5\supplier\SupplierListenerApplication.class
+com\taller5\supplier\dto\SupplierNotification.class
+com\taller5\supplier\dto\SupplierNotification$SupplierNotificationBuilder.class
+com\taller5\supplier\listener\SupplierKafkaListener.class
+com\taller5\supplier\dto\SupplierNotification$ProductItem$ProductItemBuilder.class

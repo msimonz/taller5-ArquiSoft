@@ -63,6 +63,57 @@ services:
       timeout: 3s
       retries: 20
 
+  # ==================== MESSAGE BROKERS ====================
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    restart: unless-stopped
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+    restart: unless-stopped
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  # ActiveMQ NO ES NECESARIO - WildFly trae Artemis integrado
+  # activemq:
+  #   image: apache/activemq-artemis:2.31.2
+  #   container_name: activemq
+  #   restart: unless-stopped
+  #   environment:
+  #     ARTEMIS_USER: admin
+  #     ARTEMIS_PASSWORD: admin
+  #   ports:
+  #     - "61616:61616"  # OpenWire/JMS
+  #     - "8161:8161"    # Web Console
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "curl -f http://localhost:8161 || exit 1"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 10
+
   # ==================== AGGREGATOR ====================
 
   aggregator:
@@ -129,12 +180,41 @@ services:
     restart: unless-stopped
     depends_on:
       aggregator: { condition: service_healthy }
+      kafka: { condition: service_healthy }
+      notification-mdb: { condition: service_started }
     environment:
       AGGREGATOR_URL: http://aggregator:8080
       LOGGING_LEVEL_feign: INFO
       LOGGING_LEVEL_com.taller5.billing.dal: DEBUG
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_ACTIVEMQ_BROKER_URL: tcp://notification-mdb:61616
+      SPRING_ACTIVEMQ_USER: admin
+      SPRING_ACTIVEMQ_PASSWORD: admin
     ports:
       - "8083:8080"
+
+  # ==================== NOTIFICATION SERVICES ====================
+  supplier-listener:
+    build: ./supplier-listener
+    container_name: supplier-listener
+    restart: unless-stopped
+    depends_on:
+      kafka: { condition: service_healthy }
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    ports:
+      - "8084:8084"
+
+  notification-mdb:
+    build: ./notification-mdb
+    container_name: notification-mdb
+    restart: unless-stopped
+    depends_on:
+      - kafka
+    ports:
+      - "8085:8080"    # Aplicación WildFly
+      - "9990:9990"    # Consola de administración WildFly
+      - "61616:61616"  # Artemis JMS integrado en WildFly
 
 volumes:
   inventory_data:

@@ -18,4 +18,8 @@ public class Product {
   private BigDecimal price;
 
   private Integer stock;
+
+  @ManyToOne(fetch = FetchType.EAGER)
+  @JoinColumn(name = "supplier_id", nullable = false)
+  private Supplier supplier;
 }

@@ -18,6 +18,7 @@ public interface AggregatorDalClient {
   void release(@RequestBody ReserveReq req);
 
   // ===== DTOs del DAL =====
-  record ProductDto(Long id, String name, BigDecimal price, Integer stock) {}
+  record ProductDto(Long id, String name, BigDecimal price, Integer stock, SupplierDto supplier) {}
+  record SupplierDto(Long id, String name, String email) {}
   record ReserveReq(Long productId, Integer quantity) {}
 }
