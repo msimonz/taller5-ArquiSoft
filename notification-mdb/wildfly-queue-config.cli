@@ -1,0 +1,11 @@
+# Conectar al servidor
+connect
+
+# Crear la cola customer-notifications
+/subsystem=messaging-activemq/server=default/jms-queue=customerNotifications:add(entries=["java:/jms/queue/customer-notifications", "java:jboss/exported/jms/queue/customer-notifications"])
+
+# Verificar
+/subsystem=messaging-activemq/server=default/jms-queue=customerNotifications:read-resource
+
+# Salir
+exit

@@ -9,4 +9,7 @@ embed-server --server-config=standalone-full.xml
 # Permitir auto-creación de queues
 /subsystem=messaging-activemq/server=default/address-setting=#:write-attribute(name=auto-create-queues,value=true)
 
+# CRÍTICO: Crear la cola customerNotifications ANTES de que se despliegue el MDB
+/subsystem=messaging-activemq/server=default/jms-queue=customerNotifications:add(entries=["java:/jms/queue/customerNotifications", "java:jboss/exported/jms/queue/customerNotifications", "customerNotifications"])
+
 stop-embedded-server

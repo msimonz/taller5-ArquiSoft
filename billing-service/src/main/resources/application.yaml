@@ -15,9 +15,11 @@ spring:
   # ActiveMQ Artemis Configuration (WildFly integrated)
   artemis:
     mode: native
-    broker-url: tcp://notification-mdb:61616
+    broker-url: tcp://notification-mdb:61616?protocols=CORE
     user: admin
     password: admin123
+    embedded:
+      enabled: false  # CRÍTICO: Deshabilitar broker embebido
   jms:
     pub-sub-domain: false  # usar colas, no topics
 

@@ -13,21 +13,29 @@ public class JmsCustomerNotificationService {
 
   private final JmsTemplate jmsTemplate;
   
-  private static final String CUSTOMER_QUEUE = "customer-notifications";
+  // Artemis Core Protocol usa directamente el nombre de la cola/address, NO JNDI
+  private static final String CUSTOMER_QUEUE = "jms.queue.customerNotifications";
 
   public void notifyCustomer(CustomerNotification notification) {
-    log.info("Enviando notificación al cliente {} (email: {})", 
+    log.info("📧 Enviando notificación al cliente {} (email: {}) a cola: {}", 
         notification.getCustomerId(), 
-        notification.getCustomerEmail());
+        notification.getCustomerEmail(),
+        CUSTOMER_QUEUE);
     
     try {
+      // Debug: ver detalles del ConnectionFactory
+      var cf = jmsTemplate.getConnectionFactory();
+      log.info("🔍 DEBUG ConnectionFactory class: {}", cf.getClass().getName());
+      log.info("🔍 DEBUG ConnectionFactory toString: {}", cf.toString());
+      
       jmsTemplate.convertAndSend(CUSTOMER_QUEUE, notification);
-      log.info("Notificación enviada exitosamente al cliente {}", 
+      log.info("✅ Notificación JMS enviada exitosamente al cliente {}", 
           notification.getCustomerId());
     } catch (Exception ex) {
-      log.error("Error enviando notificación al cliente {}: {}", 
+      log.error("❌ ERROR FATAL enviando notificación JMS al cliente {}: {}", 
           notification.getCustomerId(), 
           ex.getMessage(), ex);
+      throw new RuntimeException("Failed to send JMS notification", ex);
     }
   }
 }

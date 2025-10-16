@@ -1,9 +1,17 @@
+# Stage 1: Build WAR with Maven
+FROM maven:3.9-eclipse-temurin-17 AS build
+WORKDIR /app
+COPY pom.xml .
+COPY src ./src
+RUN mvn clean package -DskipTests
+
+# Stage 2: Deploy to WildFly
 FROM quay.io/wildfly/wildfly:31.0.0.Final-jdk17
 
 USER root
 
-# Copiar el WAR al directorio de deployments de WildFly
-COPY target/notification-mdb.war /opt/jboss/wildfly/standalone/deployments/
+# Copiar el WAR compilado al directorio de deployments de WildFly
+COPY --from=build /app/target/notification-mdb.war /opt/jboss/wildfly/standalone/deployments/
 
 # Copiar script de configuración de Artemis
 COPY wildfly-artemis-config.cli /opt/jboss/wildfly/

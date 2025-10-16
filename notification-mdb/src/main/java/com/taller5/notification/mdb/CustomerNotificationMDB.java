@@ -14,7 +14,7 @@ import java.util.logging.Logger;
 @MessageDriven(
     activationConfig = {
         @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "jakarta.jms.Queue"),
-        @ActivationConfigProperty(propertyName = "destination", propertyValue = "customer-notifications"),
+        @ActivationConfigProperty(propertyName = "destination", propertyValue = "customerNotifications"),
         @ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge")
     }
 )
