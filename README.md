@@ -871,8 +871,3 @@ taller5-ArquiSoft/
 3. Usa `docker-compose ps` para verificar el estado de los servicios
 4. Si cambias código, recuerda recompilar con Maven antes de `docker-compose up --build`
 
-## Autor
-
-Taller 5 - Arquitectura de Software  
-Universidad: [Tu Universidad]  
-Fecha: Octubre 2025
