@@ -6,8 +6,6 @@
 sudo docker-compose up -d
 ```
 
-Esperar ~30 segundos para que todos los servicios inicien correctamente.
-
 ## 2. Crear un Pago
 
 ```bash
@@ -71,7 +69,7 @@ curl -X POST http://localhost:8083/api/invoices \
 sudo docker logs supplier-listener --tail 50
 ```
 
-**Deberías ver:**
+**Se deberia ver:**
 ```
 ========================================
 NOTIFICACION RECIBIDA PARA PROVEEDOR
@@ -100,7 +98,7 @@ Productos vendidos:
 sudo docker logs notification-mdb --tail 50
 ```
 
-**Deberías ver:**
+**Se deberia ver:**
 ```
 ========================================
 EMAIL NOTIFICATION RECEIVED
@@ -145,7 +143,6 @@ sudo docker-compose down
 | Kafka | 9092 | Message broker (proveedores) |
 | WildFly Artemis | 61616 | JMS broker (clientes) |
 
-## Notas Importantes
 
 - **Kafka**: Envía notificaciones a proveedores por cada producto en la factura
 - **JMS**: Envía UNA notificación al cliente con todos los productos
